@@ -165,6 +165,19 @@ const Editor = ({  shapeToDraw, imageUrl }) => {
     }
   };
 
+  //delete the selected object in canvas
+  const handleDeleteObject=() => {
+    const canvas = canvasInstance.current;
+    if(canvas){
+      const activeObject = canvas.getActiveObject();
+      if(activeObject){
+        canvas.remove(activeObject); //remove the selected object
+        canvas.renderAll(); //re-render the canvas
+      }else{
+        alert('No Object selected to delete');
+      }
+    }
+  }
 
   // Draw shape based on shapeToDraw prop
   useEffect(() => {
@@ -180,11 +193,26 @@ const Editor = ({  shapeToDraw, imageUrl }) => {
     if (shapeToDraw === 'Iframe') handleAddIframeSimulated();
   }, [shapeToDraw]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        handleDeleteObject();
+      }
+    };
+  
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+  
+
   return (
     <div>
       <div className='topBarInCanvasEditor'>
         <span>
              <button onClick={handleSaveCanvas}>Save</button>
+             <button onClick={handleDeleteObject}>Delete</button>
         </span>
       </div>
       <canvas ref={canvasRef} style={{ border: '1px solid black' }}/>
