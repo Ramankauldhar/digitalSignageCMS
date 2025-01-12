@@ -1,9 +1,14 @@
 import { useState } from "react";
 import '../styles/mainPageStyles.css';
 
+import Editor from "../components/Editor";
+
 const MainPage = () => {
     const [inputValue, setInputValue] = useState('');
-
+    // State to hold selected shape type
+    const [shapeToDraw, setShapeToDraw] = useState(''); 
+    // State to hold the uploaded image URL
+    const [imageUrl, setImageUrl] = useState(null); 
     //state to track visibiity of options for each widget group
     const [visibleWidgets, setVisibleWidgets] = useState({
       wid1: true,
@@ -21,6 +26,18 @@ const MainPage = () => {
           [widgetKey]: !prevState[widgetKey],
       }));
     };
+
+    // Handle image upload and set the URL
+    const handleImageUpload = (e) => {
+           const file = e.target.files[0];  // Get the file from the input
+           if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                     setImageUrl(reader.result);  // Set the image URL after reading the file
+                };
+                reader.readAsDataURL(file); // Read the file as a Data URL
+          }
+     };
 
     return(
         <>
@@ -55,7 +72,7 @@ const MainPage = () => {
                             {visibleWidgets.wid1 && (
                               <div className="options opt1">
                                     <i className="fas fa-map-marker-alt"></i>
-                                    <button>Marker</button>
+                                    <button onClick={() => setShapeToDraw('Marker')}>Marker</button>
                               </div>
                             )}
                             <hr></hr>
@@ -68,7 +85,7 @@ const MainPage = () => {
                             {visibleWidgets.wid2 && (
                                 <div className="options opt2">
                                     <i className="fas fa-font"></i>
-                                    <button>Text</button>
+                                    <button onClick={() => setShapeToDraw('Text')}>Text</button>
                                 </div>
                             )}
                         </div>
@@ -82,11 +99,11 @@ const MainPage = () => {
                                 <>
                                     <div className="options opt3">
                                         <i className="fas fa-image"></i>
-                                        <button>Image</button>
+                                        <button onClick={() => setShapeToDraw('Image')}>Image</button>
                                     </div>
                                     <div className="options opt3">
                                         <i className="fas fa-image"></i>
-                                        <button>GIF</button>
+                                        <button onClick={() => setShapeToDraw('GIF')}>GIF</button>
                                     </div>
                                 </>
                             )}
@@ -101,20 +118,17 @@ const MainPage = () => {
                                 <>
                                     <div className="options opt4">
                                         <i className="fas fa-caret-up triangle"></i>
-                                        <button>Triangle</button>
+                                        <button onClick={() => setShapeToDraw('Triangle')}>Triangle</button>
                                     </div>
                                     <div className="options opt4">
                                         <i className="fas fa-stop"></i>
-                                        <button>Rectangle</button>
+                                        <button onClick={() => setShapeToDraw('Square')}>Rectangle</button>
                                     </div>
                                     <div className="options opt4">
                                         <i className="fas fa-circle"></i>
-                                        <button>Circle</button>
+                                        <button onClick={() => setShapeToDraw('Circle')}>Circle</button>
                                     </div>
-                                    <div className="options opt4">
-                                        <i className="fas fa-cube"></i>
-                                        <button>Cube</button>
-                                    </div>
+                         
                                 </>
                               )}
                         </div>
@@ -132,11 +146,11 @@ const MainPage = () => {
                                     </div>
                                     <div className="options opt5">
                                         <i className="fas fa-minus"></i>
-                                        <button>Line</button>
+                                        <button onClick={() => setShapeToDraw('Line')}>Line</button>
                                     </div>
                                     <div className="options opt5">
                                         <i className="fas fa-arrow-right"></i>
-                                        <button>Arrow</button>
+                                        <button onClick={() => setShapeToDraw('Arrow')}>Arrow</button>
                                     </div>
                                 </>
                             )}
@@ -155,11 +169,11 @@ const MainPage = () => {
                                     </div>
                                     <div className="options opt6">
                                         <i className="fab fa-html5"></i>
-                                        <button>Element</button>
+                                        <button onClick={() => setShapeToDraw('Iframe')}>Element</button>
                                     </div>
                                     <div className="options opt6">
                                         <i className="fas fa-window-maximize"></i>
-                                        <button>Iframe</button>
+                                        <button onClick={() => setShapeToDraw('Iframe')}>Iframe</button>
                                     </div>
                                     <div className="options opt6">
                                         <i className="fas fa-video"></i>
@@ -184,8 +198,31 @@ const MainPage = () => {
                     </div>
                 </div>
 
-                <div className="editorAreaContainer"> </div>
-                <div className="rightContainer"></div>
+                <div className="editorAreaContainer">
+                    <div>
+                         <span>
+                               <button>Save</button>
+                               <button>Delete</button>
+                         </span>
+                    </div>
+                    <div>
+                          <Editor shapeToDraw={shapeToDraw} imageUrl={imageUrl}/>
+                    </div>
+                </div>
+                <div className="rightContainer">
+                     <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="imageUploadInput"
+                     />
+                    {imageUrl && (
+                          <div>
+                               <p>Image Preview:</p>
+                               <img src={imageUrl} alt="Uploaded" style={{ width: "100%", maxHeight: "300px" }} />
+                          </div>
+                    )}
+                </div>
             </div>
           </div>
         </>
