@@ -200,12 +200,6 @@ const MainPage = () => {
 
                 <div className="editorAreaContainer">
                     <div>
-                         <span>
-                               <button>Save</button>
-                               <button>Delete</button>
-                         </span>
-                    </div>
-                    <div>
                           <Editor shapeToDraw={shapeToDraw} imageUrl={imageUrl}/>
                     </div>
                 </div>

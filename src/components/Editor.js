@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as fabric from 'fabric';
-import { saveContent } from '../services/api'
+import { saveContent } from '../services/api';
+import ContentList from "../components/ContentList";
 
 const Editor = ({  shapeToDraw, imageUrl }) => {
   const canvasRef = useRef(null);
@@ -181,8 +182,13 @@ const Editor = ({  shapeToDraw, imageUrl }) => {
 
   return (
     <div>
-      <button onClick={handleSaveCanvas}>Save</button>
+      <div className='topBarInCanvasEditor'>
+        <span>
+             <button onClick={handleSaveCanvas}>Save</button>
+        </span>
+      </div>
       <canvas ref={canvasRef} style={{ border: '1px solid black' }}/>
+      <ContentList />
     </div>
   );
 };

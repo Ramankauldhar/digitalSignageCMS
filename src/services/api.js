@@ -11,3 +11,12 @@ export const saveContent = async (data) =>{
         throw error;
     }
 }
+export const fetchContents = async () =>{
+    try{
+        const response = await axios.get(`${API_URL}/contents`);
+        return response.data;
+    }catch(error){
+        console.error('Error fetching all contents:', error);
+        throw error;
+    }
+};

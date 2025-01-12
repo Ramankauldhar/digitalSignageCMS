@@ -1,0 +1,27 @@
+.contentList {
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.contentList h2 {
+    margin-bottom: 10px;
+}
+
+.contentList ul {
+    list-style: none;
+    padding: 0;
+}
+
+.contentList li {
+    padding: 8px;
+    margin: 5px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.contentList li:last-child {
+    border-bottom: none;
+}
+
