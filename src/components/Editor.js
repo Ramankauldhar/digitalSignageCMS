@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as fabric from 'fabric';
+import { saveContent } from '../services/api'
 
 const Editor = ({  shapeToDraw, imageUrl }) => {
   const canvasRef = useRef(null);
@@ -7,7 +8,7 @@ const Editor = ({  shapeToDraw, imageUrl }) => {
 
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasRef.current, {
-      height: 1000,
+      height: 800,
       width: 800,
       backgroundColor: 'white',
       selection: false,
@@ -149,6 +150,20 @@ const Editor = ({  shapeToDraw, imageUrl }) => {
     canvasInstance.current.add(rect, text);
   };
 
+  //save canvas state
+  const handleSaveCanvas = async () => {
+    if(!canvasInstance.current) return;
+    const canvasData = canvasInstance.current.toJSON();
+    try{
+      const reponse = await saveContent(canvasData); //call saveContent func from API
+      console.log('Content saved successfully', reponse);
+      alert('Canvas content Saved!');
+    }catch(error){
+      console.error('Error saving canvas content:', error);
+      alert("Failed to save content");
+    }
+  };
+
 
   // Draw shape based on shapeToDraw prop
   useEffect(() => {
@@ -166,6 +181,7 @@ const Editor = ({  shapeToDraw, imageUrl }) => {
 
   return (
     <div>
+      <button onClick={handleSaveCanvas}>Save</button>
       <canvas ref={canvasRef} style={{ border: '1px solid black' }}/>
     </div>
   );
