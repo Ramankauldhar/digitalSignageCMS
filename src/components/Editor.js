@@ -1,25 +1,32 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef , useState} from 'react';
 import * as fabric from 'fabric';
 import { saveContent } from '../services/api';
 import ContentList from "../components/ContentList";
+import '../styles/mainPageStyles.css';
 
-const Editor = ({  shapeToDraw, imageUrl }) => {
+const Editor = ({  shapeToDraw}) => {
   const canvasRef = useRef(null);
   const canvasInstance = useRef(null);
+  const [canvasSize, setCanvasSize] = useState(600); // State for dynamic resizing
 
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasRef.current, {
-      height: 800,
-      width: 800,
+      height: canvasSize,
+      width: canvasSize,
       backgroundColor: 'white',
       selection: false,
     });
     canvasInstance.current = canvas;
+    canvas.renderAll(); //forcing canvas to render initially
 
     return () => {
       canvas.dispose();
     };
-  }, []);
+  }, [canvasSize]);
+
+  // Canvas adjustment handlers
+  const increaseCanvasSize = () => setCanvasSize((prevSize) => prevSize + 100);
+  const decreaseCanvasSize = () => setCanvasSize((prevSize) => Math.max(300, prevSize - 100));
 
   //handler for loaction marker
   const handleAddLocationMarker = () => {
@@ -154,18 +161,20 @@ const Editor = ({  shapeToDraw, imageUrl }) => {
   //save canvas state
   const handleSaveCanvas = async () => {
     if(!canvasInstance.current) return;
-    const canvasData = canvasInstance.current.toJSON();
-    try{
-      const reponse = await saveContent(canvasData); //call saveContent func from API
-      console.log('Content saved successfully', reponse);
-      alert('Canvas content Saved!');
-    }catch(error){
-      console.error('Error saving canvas content:', error);
-      alert("Failed to save content");
+
+    // Convert the canvas content to JSON
+    const canvasData = JSON.stringify(canvasInstance.current.toJSON());
+    try {
+         const response = await saveContent({ data: canvasData }); // Send the stringified data
+         console.log('Content saved successfully:', response);
+         alert('Canvas content saved!');
+    } catch (error) {
+         console.error('Error saving canvas content:', error);
+         alert('Failed to save content');
     }
   };
 
-  //delete the selected object in canvas
+  //delete the selected object from canvas
   const handleDeleteObject=() => {
     const canvas = canvasInstance.current;
     if(canvas){
@@ -193,9 +202,10 @@ const Editor = ({  shapeToDraw, imageUrl }) => {
     if (shapeToDraw === 'Iframe') handleAddIframeSimulated();
   }, [shapeToDraw]);
 
+  //perform the delete object func from canvas when user pree "delete" or backspace key from keyboard
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (e.key === 'Delete') {
         handleDeleteObject();
       }
     };
@@ -215,8 +225,10 @@ const Editor = ({  shapeToDraw, imageUrl }) => {
              <button onClick={handleDeleteObject}>Delete</button>
         </span>
       </div>
-      <canvas ref={canvasRef} style={{ border: '1px solid black' }}/>
-      <ContentList />
+      <canvas ref={canvasRef} />
+      <button onClick={increaseCanvasSize}>+</button>
+      <button onClick={decreaseCanvasSize}>-</button>
+      <ContentList canvasInstance={canvasInstance} />
     </div>
   );
 };
