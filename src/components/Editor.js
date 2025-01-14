@@ -4,7 +4,7 @@ import { saveContent } from '../services/api';
 import ContentList from "../components/ContentList";
 import '../styles/mainPageStyles.css';
 
-const Editor = ({  shapeToDraw}) => {
+const Editor = ({ shapeToDraw, imageUrl, handleImageUpload }) => {
   const canvasRef = useRef(null);
   const canvasInstance = useRef(null);
   const [canvasSize, setCanvasSize] = useState(600); // State for dynamic resizing
@@ -17,7 +17,14 @@ const Editor = ({  shapeToDraw}) => {
       selection: false,
     });
     canvasInstance.current = canvas;
-    canvas.renderAll(); //forcing canvas to render initially
+    
+    // Load content from localStorage immediately if available
+    if (localStorage.getItem("canvasState")) {
+        loadCanvasFromLocalStorage();
+    } else {
+        // If there's no saved state, render the blank canvas initially
+        canvas.renderAll();
+    }
 
     return () => {
       canvas.dispose();
@@ -30,7 +37,7 @@ const Editor = ({  shapeToDraw}) => {
 
   //handler for loaction marker
   const handleAddLocationMarker = () => {
-    fabric.Image.fromURL('images/locationMarker.webp', (img) => {
+    fabric.Image.fromURL('public/images/locationMarker.webp', (img) => {
       img.set({
         left: 150,
         top: 150,
@@ -117,18 +124,50 @@ const Editor = ({  shapeToDraw}) => {
   };
 
   const handleAddImage = () => {
-    fabric.Image.fromURL('/images/transparentBg.png', (img) => {
-      if (img) {
-        console.log('Image loaded successfully:', img);
-        img.set({ left: 200, top: 200 });
-        canvasInstance.current.add(img);
-      } else {
-        console.error('Failed to load the image.');
-      }
+    const imageUrl = '/images/transparentBg.png'; // Path to the image file
+
+    // Load the image into the canvas
+    fabric.Image.fromURL(imageUrl, (img) => {
+        if (img) {
+            console.log('Image loaded successfully:', img);
+
+            // Customize image properties
+            img.set({
+                left: (canvasInstance.current.getWidth() - img.width) / 2 || 200, // Center horizontally
+                top: (canvasInstance.current.getHeight() - img.height) / 2 || 200, // Center vertically
+                selectable: true, // Make the image draggable
+                hasControls: true, // Allow resizing
+                hasBorders: true, // Show borders
+            });
+
+            // Optional: Scale image if it's too large
+            const maxWidth = 300;
+            const maxHeight = 300;
+            if (img.width > maxWidth || img.height > maxHeight) {
+                const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+                img.scale(scale);
+            }
+
+            // Add the image to the canvas
+            canvasInstance.current.add(img);
+
+            // Center the image on the canvas
+            canvasInstance.current.centerObject(img);
+            canvasInstance.current.setActiveObject(img);
+
+            // Render the canvas
+            canvasInstance.current.renderAll();
+        } else {
+            console.error('Failed to load the image.');
+        }
+    }, 
+    {
+        crossOrigin: 'anonymous', // Enable cross-origin for external images
     });
-  };
+};
+
   const handleAddGif = () => {
-    fabric.Image.fromURL('images/earth.gif', (img) => {
+    fabric.Image.fromURL('/images/earth.gif', (img) => {
       img.set({ left: 200, top: 200 });
       canvasInstance.current.add(img);
     }, (error) => {
@@ -160,10 +199,20 @@ const Editor = ({  shapeToDraw}) => {
 
   //save canvas state
   const handleSaveCanvas = async () => {
-    if(!canvasInstance.current) return;
+
+    //preventing canvas to save empty canvas 
+    if (!canvasInstance.current || !canvasInstance.current.getObjects().length) {
+      alert('Canvas is empty, nothing to save.');
+      return;
+    }  
 
     // Convert the canvas content to JSON
     const canvasData = JSON.stringify(canvasInstance.current.toJSON());
+
+    // Save to localStorage
+    localStorage.setItem('canvasState', canvasData);
+    console.log('Canvas content saved to localStorage.');
+
     try {
          const response = await saveContent({ data: canvasData }); // Send the stringified data
          console.log('Content saved successfully:', response);
@@ -188,18 +237,36 @@ const Editor = ({  shapeToDraw}) => {
     }
   }
 
+  //load the saved canvasData from localStorage
+  const loadCanvasFromLocalStorage = () => {
+    const savedCanvasData = localStorage.getItem('canvasState');
+    if (savedCanvasData && canvasInstance.current) {
+      canvasInstance.current.loadFromJSON(savedCanvasData, () => {
+        console.log('Canvas content loaded from localStorage.');
+        canvasInstance.current.renderAll();//explicit render after loading state
+      });
+    } else {
+      console.log('No canvas content found in localStorage.');
+    }
+  };
+
   // Draw shape based on shapeToDraw prop
   useEffect(() => {
-    if (shapeToDraw === 'Marker') handleAddLocationMarker();
-    if (shapeToDraw === 'Text') handleAddText();
-    if (shapeToDraw === 'Line') handleAddLine();
-    if (shapeToDraw === 'Triangle') handleAddTriangle();
-    if (shapeToDraw === 'Circle') handleAddCircle();
-    if (shapeToDraw === 'Square') handleAddSquare();
-    if (shapeToDraw === 'Arrow') handleAddArrow();
-    if (shapeToDraw === 'Image') handleAddImage();
-    if (shapeToDraw === 'GIF') handleAddGif();
-    if (shapeToDraw === 'Iframe') handleAddIframeSimulated();
+    if (shapeToDraw) {
+      switch (shapeToDraw) {
+        case 'Marker': handleAddLocationMarker(); break;
+        case 'Text': handleAddText(); break;
+        case 'Line': handleAddLine(); break;
+        case 'Triangle': handleAddTriangle(); break;
+        case 'Circle': handleAddCircle(); break;
+        case 'Square': handleAddSquare(); break;
+        case 'Arrow': handleAddArrow(); break;
+        case 'Image': handleAddImage(); break;
+        case 'GIF': handleAddGif(); break;
+        case 'Iframe': handleAddIframeSimulated(); break;
+        default: break;
+      }
+    }
   }, [shapeToDraw]);
 
   //perform the delete object func from canvas when user pree "delete" or backspace key from keyboard
@@ -215,8 +282,39 @@ const Editor = ({  shapeToDraw}) => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-  
 
+
+  useEffect(() => {
+    if (imageUrl && canvasRef.current) {
+      // Add the uploaded image to the canvas
+      const canvas = canvasRef.current.canvasInstance;
+
+      fabric.Image.fromURL(imageUrl, (img) => {
+        img.set({
+          left: (canvas.getWidth() - img.width) / 2 || 200,
+          top: (canvas.getHeight() - img.height) / 2 || 200,
+          selectable: true,
+          hasControls: true,
+          hasBorders: true,
+        });
+
+        // Optional: Scale image if too large
+        const maxWidth = 300;
+        const maxHeight = 300;
+        if (img.width > maxWidth || img.height > maxHeight) {
+          const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+          img.scale(scale);
+        }
+
+        canvas.add(img);
+        canvas.centerObject(img);
+        canvas.setActiveObject(img);
+        canvas.renderAll();
+      });
+    }
+  }, [imageUrl]);
+
+  
   return (
     <div>
       <div className='topBarInCanvasEditor'>
