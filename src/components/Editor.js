@@ -11,20 +11,32 @@ const Editor = ({ shapeToDraw, imageUrl, handleImageUpload }) => {
   const [canvasSize, setCanvasSize] = useState(600); // State for dynamic resizing
   const { screenId } = useScreenId();  // Get the screenId from context
 
-  // Ensure screenId is available
-  if (!screenId) {
-      alert("No screenId found. Please register a screen first.");
-      return null;
-  }
+  //load the saved canvasData from localStorage
+  const loadCanvasFromLocalStorage = () => {
+    const savedCanvasData = localStorage.getItem('canvasState');
+    if (savedCanvasData && canvasInstance.current) {
+      canvasInstance.current.loadFromJSON(savedCanvasData, () => {
+        console.log('Canvas content loaded from localStorage.');
+        canvasInstance.current.renderAll();//explicit render after loading state
+      });
+    } else {
+      console.log('No canvas content found in localStorage.');
+    }
+  };
 
   useEffect(() => {
+    // Ensure screenId is available
+    if (!screenId) {
+       alert("No screenId found. Please register a screen first.");
+       return null;
+    }
     const canvas = new fabric.Canvas(canvasRef.current, {
       height: canvasSize,
       width: canvasSize,
       backgroundColor: 'white',
       selection: false,
     });
-    canvasInstance.current = canvas;
+    canvasInstance.current = canvas; //store canvas instance in ref
     
     // Load content from localStorage immediately if available
     if (localStorage.getItem("canvasState")) {
@@ -35,9 +47,88 @@ const Editor = ({ shapeToDraw, imageUrl, handleImageUpload }) => {
     }
 
     return () => {
-      canvas.dispose();
+      canvas.dispose(); // cleanup canvas when comp unmounts
     };
-  }, [canvasSize]);
+  }, [canvasSize, screenId]);
+
+  // This hook runs when shapeToDraw changes
+  useEffect(() => {
+    if (shapeToDraw) {
+      switch (shapeToDraw) {
+        case 'Marker': handleAddLocationMarker(); break;
+        case 'Text': handleAddText(); break;
+        case 'Line': handleAddLine(); break;
+        case 'Triangle': handleAddTriangle(); break;
+        case 'Circle': handleAddCircle(); break;
+        case 'Square': handleAddSquare(); break;
+        case 'Arrow': handleAddArrow(); break;
+        case 'Image': handleAddImage(); break;
+        case 'GIF': handleAddGif(); break;
+        case 'Iframe': handleAddIframeSimulated(); break;
+        default: break;
+      }
+    }
+  }, [shapeToDraw]); 
+
+  //for image upload
+  useEffect(() => {
+    if (imageUrl && canvasRef.current) {
+      // Add the uploaded image to the canvas
+      const canvas = canvasRef.current;
+
+      fabric.Image.fromURL(imageUrl, (img) => {
+        img.set({
+          left: (canvas.getWidth() - img.width) / 2 || 200,
+          top: (canvas.getHeight() - img.height) / 2 || 200,
+          selectable: true,
+          hasControls: true,
+          hasBorders: true,
+        });
+
+        // Optional: Scale image if too large
+        const maxWidth = 300;
+        const maxHeight = 300;
+        if (img.width > maxWidth || img.height > maxHeight) {
+          const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+          img.scale(scale);
+        }
+
+        canvas.add(img);
+        canvas.centerObject(img);
+        canvas.setActiveObject(img);
+        canvas.renderAll();
+      });
+    }
+  }, [imageUrl]);
+
+   //perform the delete object func from canvas when user pree "delete" or backspace key from keyboard
+   useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Delete') {
+        handleDeleteObject();
+      }
+    };
+  
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+  
+
+  //clear the canvas function
+  const clearCanvas = () => {
+    const canvas = canvasInstance.current; // Ensure canvasInstance is initialized
+    // Clear all objects from the canvas
+    canvas.clear();
+    // Set background color
+    canvas.backgroundColor = 'white';
+    canvas.renderAll(); // Re-render the canvas to apply the changes
+
+    // Remove the canvas state from localStorage
+    localStorage.removeItem('canvasState');
+    console.log('Canvas cleared and localStorage content removed.');
+  };
 
   // Canvas adjustment handlers
   const increaseCanvasSize = () => setCanvasSize((prevSize) => prevSize + 100);
@@ -131,6 +222,7 @@ const Editor = ({ shapeToDraw, imageUrl, handleImageUpload }) => {
     canvasInstance.current.add(line, triangle);
   };
 
+  //handler for addimage
   const handleAddImage = () => {
     const imageUrl = '/images/transparentBg.png'; // Path to the image file
 
@@ -172,9 +264,11 @@ const Editor = ({ shapeToDraw, imageUrl, handleImageUpload }) => {
     {
         crossOrigin: 'anonymous', // Enable cross-origin for external images
     });
-};
+ };
 
-  const handleAddGif = () => {
+
+ //handler for addimage
+ const handleAddGif = () => {
     fabric.Image.fromURL('/images/earth.gif', (img) => {
       img.set({ left: 200, top: 200 });
       canvasInstance.current.add(img);
@@ -244,84 +338,6 @@ const Editor = ({ shapeToDraw, imageUrl, handleImageUpload }) => {
       }
     }
   }
-
-  //load the saved canvasData from localStorage
-  const loadCanvasFromLocalStorage = () => {
-    const savedCanvasData = localStorage.getItem('canvasState');
-    if (savedCanvasData && canvasInstance.current) {
-      canvasInstance.current.loadFromJSON(savedCanvasData, () => {
-        console.log('Canvas content loaded from localStorage.');
-        canvasInstance.current.renderAll();//explicit render after loading state
-      });
-    } else {
-      console.log('No canvas content found in localStorage.');
-    }
-  };
-
-  // Draw shape based on shapeToDraw prop
-  useEffect(() => {
-    if (shapeToDraw) {
-      switch (shapeToDraw) {
-        case 'Marker': handleAddLocationMarker(); break;
-        case 'Text': handleAddText(); break;
-        case 'Line': handleAddLine(); break;
-        case 'Triangle': handleAddTriangle(); break;
-        case 'Circle': handleAddCircle(); break;
-        case 'Square': handleAddSquare(); break;
-        case 'Arrow': handleAddArrow(); break;
-        case 'Image': handleAddImage(); break;
-        case 'GIF': handleAddGif(); break;
-        case 'Iframe': handleAddIframeSimulated(); break;
-        default: break;
-      }
-    }
-  }, [shapeToDraw]);
-
-  //perform the delete object func from canvas when user pree "delete" or backspace key from keyboard
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Delete') {
-        handleDeleteObject();
-      }
-    };
-  
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-
-  useEffect(() => {
-    if (imageUrl && canvasRef.current) {
-      // Add the uploaded image to the canvas
-      const canvas = canvasRef.current.canvasInstance;
-
-      fabric.Image.fromURL(imageUrl, (img) => {
-        img.set({
-          left: (canvas.getWidth() - img.width) / 2 || 200,
-          top: (canvas.getHeight() - img.height) / 2 || 200,
-          selectable: true,
-          hasControls: true,
-          hasBorders: true,
-        });
-
-        // Optional: Scale image if too large
-        const maxWidth = 300;
-        const maxHeight = 300;
-        if (img.width > maxWidth || img.height > maxHeight) {
-          const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
-          img.scale(scale);
-        }
-
-        canvas.add(img);
-        canvas.centerObject(img);
-        canvas.setActiveObject(img);
-        canvas.renderAll();
-      });
-    }
-  }, [imageUrl]);
-
   
   return (
     <div>
@@ -329,6 +345,7 @@ const Editor = ({ shapeToDraw, imageUrl, handleImageUpload }) => {
         <span>
              <button onClick={handleSaveCanvas}>Save</button>
              <button onClick={handleDeleteObject}>Delete</button>
+             <button onClick={clearCanvas}>Clear Canvas</button>
         </span>
       </div>
       <canvas ref={canvasRef} />
