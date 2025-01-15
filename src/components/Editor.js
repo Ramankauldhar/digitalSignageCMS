@@ -1,5 +1,6 @@
 import React, { useEffect, useRef , useState} from 'react';
 import * as fabric from 'fabric';
+import { useScreenId } from '../context/ScreenIdContext'; //useScreenId hook
 import { saveContent } from '../services/api';
 import ContentList from "../components/ContentList";
 import '../styles/mainPageStyles.css';
@@ -8,6 +9,13 @@ const Editor = ({ shapeToDraw, imageUrl, handleImageUpload }) => {
   const canvasRef = useRef(null);
   const canvasInstance = useRef(null);
   const [canvasSize, setCanvasSize] = useState(600); // State for dynamic resizing
+  const { screenId } = useScreenId();  // Get the screenId from context
+
+  // Ensure screenId is available
+  if (!screenId) {
+      alert("No screenId found. Please register a screen first.");
+      return null;
+  }
 
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasRef.current, {
@@ -214,7 +222,7 @@ const Editor = ({ shapeToDraw, imageUrl, handleImageUpload }) => {
     console.log('Canvas content saved to localStorage.');
 
     try {
-         const response = await saveContent({ data: canvasData }); // Send the stringified data
+         const response = await saveContent(screenId, canvasData); // Send the stringified data
          console.log('Content saved successfully:', response);
          alert('Canvas content saved!');
     } catch (error) {
