@@ -1,16 +1,16 @@
-import React, { useEffect, useRef , useState} from 'react';
+import React, { useEffect, useRef} from 'react';
 import * as fabric from 'fabric';
 import { useScreenId } from '../context/ScreenIdContext'; //useScreenId hook
 import { saveContent } from '../services/api';
 import ContentList from "../components/ContentList";
 import '../styles/mainPageStyles.css';
 
-const Editor = ({ shapeToDraw, imageUrl, handleImageUpload }) => {
+const Editor = ({ shapeToDraw, imageUrl }) => {
   const canvasRef = useRef(null);
   const canvasInstance = useRef(null);
-  const [canvasSize, setCanvasSize] = useState(600); // State for dynamic resizing
+  const canvasSize = useRef(600); // Track the canvas size
   const { screenId } = useScreenId();  // Get the screenId from context
-
+ 
   //load the saved canvasData from localStorage
   const loadCanvasFromLocalStorage = () => {
     const savedCanvasData = localStorage.getItem('canvasState');
@@ -31,8 +31,8 @@ const Editor = ({ shapeToDraw, imageUrl, handleImageUpload }) => {
        return null;
     }
     const canvas = new fabric.Canvas(canvasRef.current, {
-      height: canvasSize,
-      width: canvasSize,
+      height: canvasSize.current,
+      width: canvasSize.current,
       backgroundColor: 'white',
       selection: false,
     });
@@ -49,7 +49,7 @@ const Editor = ({ shapeToDraw, imageUrl, handleImageUpload }) => {
     return () => {
       canvas.dispose(); // cleanup canvas when comp unmounts
     };
-  }, [canvasSize, screenId]);
+  }, [screenId]);
 
   // This hook runs when shapeToDraw changes
   useEffect(() => {
@@ -131,8 +131,29 @@ const Editor = ({ shapeToDraw, imageUrl, handleImageUpload }) => {
   };
 
   // Canvas adjustment handlers
-  const increaseCanvasSize = () => setCanvasSize((prevSize) => prevSize + 100);
-  const decreaseCanvasSize = () => setCanvasSize((prevSize) => Math.max(300, prevSize - 100));
+  // Increase canvas size
+  const increaseCanvasSize = () => {
+    const newSize = canvasSize.current + 100;
+    canvasSize.current = newSize; // Update ref
+
+    if (canvasInstance.current) {
+      canvasInstance.current.setWidth(newSize);
+      canvasInstance.current.setHeight(newSize);
+      canvasInstance.current.renderAll(); // Re-render to apply the new size
+    }
+  };
+
+  // Decrease canvas size
+  const decreaseCanvasSize = () => {
+    const newSize = Math.max(300, canvasSize.current - 100);
+    canvasSize.current = newSize; // Update ref
+
+    if (canvasInstance.current) {
+      canvasInstance.current.setWidth(newSize);
+      canvasInstance.current.setHeight(newSize);
+      canvasInstance.current.renderAll(); // Re-render to apply the new size
+    }
+  };
 
   //handler for loaction marker
   const handleAddLocationMarker = () => {
