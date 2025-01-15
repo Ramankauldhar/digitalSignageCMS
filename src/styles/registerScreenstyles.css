@@ -1,0 +1,79 @@
+.regMainContainer{
+    background-image: url('../../public/images/signcastBg.jpeg');
+    background-size: cover; /* This will make the image cover the entire div */
+    background-position: center center; /* This centers the image */
+    background-repeat: no-repeat; /* Prevents the image from repeating */
+    height: 50vh; 
+    width: 100vw; 
+    display: flex;
+    justify-content: center;  
+    align-items: center;    
+}
+.register-container, .synContainer{
+    background-color: white;
+    margin-top: 48vh;
+    width: 40vw;
+    height: 50vh;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  /* Optional: Add some shadow for a more polished look */
+    border-radius: 10px;
+}
+h2{
+    margin-top: 2.8rem;
+    font-weight: 400;
+}
+p{
+    font-weight: 400;
+    font-size: 12px;
+    padding-top: 0.4rem;
+}
+.register-form {
+    display: flex;
+    flex-direction: column;
+  }
+
+ button[type="submit"] {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    margin:25px;
+  }
+  
+ button[type="submit"]:disabled {
+    background-color: #888;
+  }
+  input{
+    padding: 0.5rem;
+    border-radius: 0.4rem;
+    color: #cac5c5;
+    font-size: 11px;
+  }
+
+.register-form label{
+    margin-top: 1.5rem;
+} 
+.synContainer{
+  text-align: center;
+}
+.sync-button h2{
+  margin-top:1.5rem;
+}
+
+.sync-button{
+   background-color: rgb(0, 179, 90);
+   color: white;
+   border: none;
+   padding: 10px;
+   cursor: pointer;
+   margin:25px;
+}
+.resetText{
+  margin-top: 1.2rem;
+  color: red;
+}
+
+.synContainer .text {
+  margin-top: 1.4rem;
+}

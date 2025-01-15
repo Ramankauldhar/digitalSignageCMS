@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerScreen, fetchContentByScreen } from '../services/api';  
 import { useScreenId } from '../context/ScreenIdContext';
+import '../styles/registerScreenstyles.css';
 
 const RegisterScreen = () => {
   const [screenId, setScreenId] = useState('');  // State to hold the screenId input
@@ -72,35 +73,53 @@ const RegisterScreen = () => {
   };
 
   return (
-    <div className="register-container">
-      <h2>Register a New Screen</h2>
-      <form onSubmit={handleRegister} className="register-form">
-        <label htmlFor="screenId">Screen ID:</label>
-        <input
-          type="text"
-          id="screenId"
-          value={screenId}
-          onChange={handleInputChange}
-          placeholder="Enter unique screen ID"
-          required
-        />
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? 'Validating...' : 'Validate Screen ID'}
-        </button>
-      </form>
-
-      {message && (
-        <div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
-          {message}
+    <div className='regMainContainer'>
+    {isScreenIdValid ? (
+      // Show synContainer if the screenId is valid
+      <div className="synContainer">
+        <h2>Signcast Local</h2>
+        <div className='text'>
+            <p>Signcast Local is a commercial software. You need a license in order to</p>
+            <p>use the software</p>
         </div>
-      )}
+  
+        {isScreenIdValid && (
+          <button onClick={handleSync} className="sync-button">
+              Sync Device
+          </button>
+        )}
+  
+        <p>To initialize the device click Reset Data</p>
+        <p className='resetText'>Reset Data</p>
+      </div>
+    ) : (
+      // Show register-container if the screenId is not valid
+      <div className="register-container">
+        <h2>Enter Screen ID</h2>
+        <p>Enter Screen ID to receive your content on this device.</p>
+        <form onSubmit={handleRegister} className="register-form">
+             <label htmlFor="screenId">Screen ID:</label><br/>
+             <input
+                 type="text"
+                 id="screenId"
+                 value={screenId}
+                 onChange={handleInputChange}
+                 placeholder="Enter or paste your ID"
+                 required
+             />
 
-      {isScreenIdValid && (
-        <button onClick={handleSync} className="sync-button">
-          Sync with Canvas
-        </button>
-      )}
-    </div>
+             {message && (
+                 <div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
+                   {message}
+                 </div>
+             )}
+             <button type="submit" disabled={isLoading}>
+                 {isLoading ? 'Validating...' : 'Activate'}
+             </button>
+        </form>
+      </div>
+    )}
+  </div>  
   );
 };
 
