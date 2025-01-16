@@ -11,6 +11,8 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
   const canvasSize = useRef(400); // Track the canvas size
   const { screenId } = useScreenId();  // Get the screenId from context
   const [previewImage, setPreviewImage] = useState(null); // State to hold the preview image
+  const [shapeList, setShapeList] = useState([]); // State to hold the list of shapes
+  const [isShapeListVisible, setIsShapeListVisible] = useState(false); // State to toggle shape list visibility
 
  
   //load the saved canvasData from localStorage
@@ -47,6 +49,10 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
         // If there's no saved state, render the blank canvas initially
         canvas.renderAll();
     }
+
+    // Event listeners for shape changes
+    canvas.on('object:added', updateShapeList);
+    canvas.on('object:removed', updateShapeList)
 
     return () => {
       canvas.dispose(); // cleanup canvas when comp unmounts
@@ -380,11 +386,56 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
     });
     setPreviewImage(dataUrl); // Update state with the generated image URL
   };
+
+  // Update the shape list based on current objects on the canvas
+  const updateShapeList = () => {
+    const canvas = canvasInstance.current;
+    if (canvas) {
+      const shapes = canvas.getObjects().map((obj, index) => {
+        return `${index + 1}. ${obj.type || 'Unknown Shape'}`;
+      });
+      setShapeList(shapes);
+    }
+  };
+  // Delete the selected object from canvas
+  const handleDeleteObjectFromList = () => {
+    const canvas = canvasInstance.current;
+    if (canvas) {
+      const activeObject = canvas.getActiveObject();
+      if (activeObject) {
+        canvas.remove(activeObject); // Remove the selected object
+        canvas.renderAll(); // Re-render the canvas
+      } else {
+        alert('No Object selected to delete');
+      }
+    }
+  };
+
   
   return (
-    <div>
+    <div className='canvasContainer'>
       <div className='topBarInCanvasEditor'>
         <span>
+             <div className='listContainer'>
+                <button onClick={() => setIsShapeListVisible(!isShapeListVisible)}>
+                     <i className={isShapeListVisible ? 'fas fa-times' : 'fas fa-layer-group'}></i>
+                 </button>
+                 {/* Render the list of shapes on canvas */}
+                 {isShapeListVisible && (
+                    <div className="shapeList">
+                      <h4>Shapes on Canvas:</h4>
+                      <ul>
+                        {shapeList.length > 0 ? (
+                           shapeList.map((shape, index) => (
+                              <li key={index}>{shape}</li>
+                           ))
+                          ) : (
+                            <li>No shapes on the canvas</li>
+                        )}
+                      </ul>
+                    </div>
+                 )}  
+             </div>
              <button onClick={handleSaveCanvas}>Save</button>
              <button onClick={handleDeleteObject}>Delete</button>
              <button onClick={clearCanvas}>Clear Canvas</button>
@@ -399,7 +450,7 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
       {previewImage && (
         <div className="previewModal">
           <img src={previewImage} alt="Canvas Preview" />
-          <button onClick={() => setPreviewImage(null)}>Close Preview</button>
+          <button onClick={() => setPreviewImage(null)}><i className='fas fa-times'></i></button>
         </div>
       )}
     </div>
