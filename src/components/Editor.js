@@ -64,6 +64,7 @@ const Editor = ({ shapeToDraw }) => {
   // This hook runs when shapeToDraw changes
   useEffect(() => {
     if (shapeToDraw) {
+      console.log("shapes", shapeToDraw);
       switch (shapeToDraw) {
         case 'Marker': handleAddLocationMarker(); break;
         case 'Text': handleAddText(); break;
@@ -229,16 +230,24 @@ const Editor = ({ shapeToDraw }) => {
   };
 
   //handler for addimage
-  const handleAddImage = (imgURL) => {
-    // Load the image into the canvas
-    fabric.Image.fromURL(imgURL, (img) => {
-      img.set({ left: 50, top: 50 });
-      img.scaleToWidth(300);
-      img.scaleToHeight(300);
+  const handleAddImage = () => {
+    const imgElement = new Image();
+    imgElement.src = '/images/signcastBg.jpeg'; 
+    imgElement.onload = () => {
+      const img = new fabric.Image(imgElement, {
+        left: 50,
+        top: 50,
+        scaleX: 300 / imgElement.width,
+        scaleY: 300 / imgElement.height,
+      });
       canvasInstance.current.add(img);
-    });
-  }
-
+      canvasInstance.current.renderAll();
+    };
+    imgElement.onerror = () => {
+      console.error("Failed to load image");
+    };
+  };
+  
  //handler for addimage
  const handleAddGif = (gifURL) => {
     fabric.Image.fromURL(gifURL, (img) => {
