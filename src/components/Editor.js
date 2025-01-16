@@ -135,25 +135,25 @@ const Editor = ({ shapeToDraw }) => {
     }
   };
 
+  //handle add location marker
   const handleAddLocationMarker = () => {
-    // Check if the image URL is valid
-    const imageUrl = "";
-    fabric.Image.fromURL(imageUrl, (img) => {
-      if (!img) {
-        console.error("Failed to load image from URL:", imageUrl);
-        return;
-      }
-      img.set({
-        left: 150,
-        top: 150,
-        scaleX: 0.1,
-        scaleY: 0.1,
-      });
-      canvasInstance.current.add(img);
-    }, { crossOrigin: 'anonymous' });  // Add CORS header if needed
-  };
+      const imgElement = new Image();
+      imgElement.src = '/images/locationMarker.png'; 
+      imgElement.onload = () => {
+        const img = new fabric.Image(imgElement, {
+          left: 50,
+          top: 50,
+          scaleX: 30 / imgElement.width,
+          scaleY: 30 / imgElement.height,
+        });
+        canvasInstance.current.add(img);
+        canvasInstance.current.renderAll();
+      };
+      imgElement.onerror = () => {
+        console.error("Failed to load image");
+      };
+    };
   
-
   //handler for text
   const handleAddText = () => {
     const textbox = new fabric.Textbox('New Text', {
@@ -232,7 +232,7 @@ const Editor = ({ shapeToDraw }) => {
   //handler for addimage
   const handleAddImage = () => {
     const imgElement = new Image();
-    imgElement.src = '/images/signcastBg.jpeg'; 
+    imgElement.src = '/images/transparentBg.png'; 
     imgElement.onload = () => {
       const img = new fabric.Image(imgElement, {
         left: 50,
@@ -249,16 +249,24 @@ const Editor = ({ shapeToDraw }) => {
   };
   
  //handler for addimage
- const handleAddGif = (gifURL) => {
-    fabric.Image.fromURL(gifURL, (img) => {
-      img.set({ left: 50, top: 50 });
-      img.scaleToWidth(300);
-      img.scaleToHeight(300);
-      canvasInstance.current.add(img);
-    }, (error) => {
-      console.error('Error loading GIF:', error);
-    });
+ const handleAddGif = () => {
+    const gifElement = new Image();
+    gifElement.src = '/images/earth.gif'; 
+    gifElement.onload = () => {
+      const gif = new fabric.Image(gifElement, {
+        left: 50,
+        top: 50,
+        scaleX: 300 / gifElement.width,
+        scaleY: 300 / gifElement.height,
+      });
+      canvasInstance.current.add(gif);
+      canvasInstance.current.renderAll();
+    };
+    gifElement.onerror = () => {
+      console.error("Failed to load image");
+    };
   };
+  
 
   //handler for Iframe add
   const handleAddIframeSimulated = () => {
