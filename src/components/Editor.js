@@ -1,4 +1,4 @@
-import React, { useEffect, useRef} from 'react';
+import React, { useEffect, useRef, useState} from 'react';
 import * as fabric from 'fabric';
 import { useScreenId } from '../context/ScreenIdContext'; //useScreenId hook
 import { saveContent } from '../services/api';
@@ -8,8 +8,10 @@ import '../styles/mainPageStyles.css';
 const Editor = ({ shapeToDraw, imageUrl }) => {
   const canvasRef = useRef(null);
   const canvasInstance = useRef(null);
-  const canvasSize = useRef(600); // Track the canvas size
+  const canvasSize = useRef(400); // Track the canvas size
   const { screenId } = useScreenId();  // Get the screenId from context
+  const [previewImage, setPreviewImage] = useState(null); // State to hold the preview image
+
  
   //load the saved canvasData from localStorage
   const loadCanvasFromLocalStorage = () => {
@@ -359,6 +361,25 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
       }
     }
   }
+
+  // Function to handle canvas preview
+  const handlePreviewCanvas = () => {
+    if (!canvasInstance.current) {
+      alert('Canvas is not ready to preview.');
+      return;
+    }
+    // Check if there are any objects on the canvas
+    if (!canvasInstance.current.getObjects().length) {
+       alert('Canvas is empty, no content to preview.');
+       return;
+    }
+    // Convert canvas to an image URL
+    const dataUrl = canvasInstance.current.toDataURL({
+      format: 'png',
+      quality: 1,
+    });
+    setPreviewImage(dataUrl); // Update state with the generated image URL
+  };
   
   return (
     <div>
@@ -367,12 +388,20 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
              <button onClick={handleSaveCanvas}>Save</button>
              <button onClick={handleDeleteObject}>Delete</button>
              <button onClick={clearCanvas}>Clear Canvas</button>
+             <button onClick={handlePreviewCanvas}>Preview</button>
         </span>
       </div>
       <canvas ref={canvasRef} />
       <button onClick={increaseCanvasSize}>+</button>
       <button onClick={decreaseCanvasSize}>-</button>
       <ContentList canvasInstance={canvasInstance} />
+      {/* Render the preview modal or section */}
+      {previewImage && (
+        <div className="previewModal">
+          <img src={previewImage} alt="Canvas Preview" />
+          <button onClick={() => setPreviewImage(null)}>Close Preview</button>
+        </div>
+      )}
     </div>
   );
 };
