@@ -77,3 +77,12 @@ p{
 .synContainer .text {
   margin-top: 1.4rem;
 }
+
+.message.error {
+  color: red;
+  font-weight: bold;
+}
+.message.success {
+  color: green;
+  font-weight: bold;
+}

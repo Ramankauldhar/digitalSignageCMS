@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { registerScreen, fetchContentByScreen } from '../services/api';  
+import { fetchContentByScreen } from '../services/api';  
 import { useScreenId } from '../context/ScreenIdContext';
 import '../styles/registerScreenstyles.css';
 
@@ -12,12 +12,6 @@ const RegisterScreen = () => {
   const [content, setContent] = useState(null);  // State to hold content for canvas
   const navigate = useNavigate();  // For navigation
   const { updateScreenId } = useScreenId();  // Get the update function from context
-
-
-  //handle change to screenId
-  const handleScreenIdChange = (e) => {
-    setScreenId(e.target.value);
-  };
 
   // Function to check if the screenId exists in the database
   const validateScreenId = async () => {

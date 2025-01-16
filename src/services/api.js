@@ -51,7 +51,18 @@ export const registerScreen = async (screenId) => {
         });
         return response.data; // Return response from the server
     } catch (error) {
-        console.error('Error registering screen:', error.response?.data || error.message);
+        console.error('Error registering screen:', error.response ? error.response.data : error.message);
         throw error; // Re-throw the error
     }
 };
+
+//check if the screen exist in screens db
+export const checkScreen = async (screenId) => {
+    try{
+        const response = await axios.get(`${API_URL}/check-screen/${screenId}`);
+        return response.data;
+    }catch(error){
+        console.error('Error checking screen:', error.response ? error.response.data : error.message);
+        throw error; // Re-throw the error
+    }
+}
