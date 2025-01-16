@@ -13,7 +13,7 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
   const [previewImage, setPreviewImage] = useState(null); // State to hold the preview image
   const [shapeList, setShapeList] = useState([]); // State to hold the list of shapes
   const [isShapeListVisible, setIsShapeListVisible] = useState(false); // State to toggle shape list visibility
-
+  const [showTooltip, setShowTooltip] = useState(false);
  
   //load the saved canvasData from localStorage
   const loadCanvasFromLocalStorage = () => {
@@ -416,9 +416,10 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
       <div className='topBarInCanvasEditor'>
          <span>
              <div className='listContainer'>
-                 <button onClick={() => setIsShapeListVisible(!isShapeListVisible)}>
+                 <button onClick={() => setIsShapeListVisible(!isShapeListVisible)} onMouseEnter={() => setShowTooltip(true)} onMouseLeave={() => setShowTooltip(false)}>
                      <i className={isShapeListVisible ? 'fas fa-times' : 'fas fa-layer-group'}></i>
                  </button>
+                 {showTooltip && ( <div className="tooltip">View shapes</div>)}
                  {/* Render the list of shapes on canvas */}
                  {isShapeListVisible && (
                      <div className="shapeList">
