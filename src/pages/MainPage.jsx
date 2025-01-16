@@ -7,8 +7,6 @@ const MainPage = () => {
     const [inputValue, setInputValue] = useState('');
     // State to hold selected shape type
     const [shapeToDraw, setShapeToDraw] = useState(null); 
-    // State to hold the uploaded image URL
-    const [imageUrl, setImageUrl] = useState(null); 
     //state to track visibiity of options for each widget group
     const [visibleWidgets, setVisibleWidgets] = useState({
       wid1: true,
@@ -25,18 +23,6 @@ const MainPage = () => {
           ...prevState,
           [widgetKey]: !prevState[widgetKey],
       }));
-    };
-
-    // Handle Image Upload and Add to Canvas
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];  // Get the file from the input
-           if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                     setImageUrl(reader.result);  // Set the image URL after reading the file
-                };
-                reader.readAsDataURL(file); // Read the file as a Data URL
-          }
     };
 
     return(
@@ -199,23 +185,7 @@ const MainPage = () => {
                 </div>
 
                 <div className="editorAreaContainer">
-                    <div>
-                          <Editor shapeToDraw={shapeToDraw} imageUrl={imageUrl} handleImageUpload={handleImageUpload}/>
-                    </div>
-                </div>
-                <div className="rightContainer">
-                     <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="imageUploadInput"
-                     />
-                    {imageUrl && (
-                          <div>
-                               <p>Image Preview:</p>
-                               <img src={imageUrl} alt="Uploaded" style={{ width: "100%", maxHeight: "300px" }} />
-                          </div>
-                    )}
+                          <Editor shapeToDraw={shapeToDraw}/>
                 </div>
             </div>
           </div>

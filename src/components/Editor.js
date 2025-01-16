@@ -5,7 +5,7 @@ import { saveContent } from '../services/api';
 import ContentList from "../components/ContentList";
 import '../styles/mainPageStyles.css';
 
-const Editor = ({ shapeToDraw, imageUrl }) => {
+const Editor = ({ shapeToDraw }) => {
   const canvasRef = useRef(null);
   const canvasInstance = useRef(null);
   const canvasSize = useRef(400); // Track the canvas size
@@ -14,6 +14,8 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
   const [shapeList, setShapeList] = useState([]); // State to hold the list of shapes
   const [isShapeListVisible, setIsShapeListVisible] = useState(false); // State to toggle shape list visibility
   const [showTooltip, setShowTooltip] = useState(false);
+  // State to hold the uploaded image URL
+  const [imageUrl, setImageUrl] = useState(null); 
  
   //load the saved canvasData from localStorage
   const loadCanvasFromLocalStorage = () => {
@@ -78,37 +80,6 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
     }
   }, [shapeToDraw]); 
 
-  //for image upload
-  useEffect(() => {
-    if (imageUrl && canvasRef.current) {
-      // Add the uploaded image to the canvas
-      const canvas = canvasRef.current;
-
-      fabric.Image.fromURL(imageUrl, (img) => {
-        img.set({
-          left: (canvas.getWidth() - img.width) / 2 || 200,
-          top: (canvas.getHeight() - img.height) / 2 || 200,
-          selectable: true,
-          hasControls: true,
-          hasBorders: true,
-        });
-
-        // Optional: Scale image if too large
-        const maxWidth = 300;
-        const maxHeight = 300;
-        if (img.width > maxWidth || img.height > maxHeight) {
-          const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
-          img.scale(scale);
-        }
-
-        canvas.add(img);
-        canvas.centerObject(img);
-        canvas.setActiveObject(img);
-        canvas.renderAll();
-      });
-    }
-  }, [imageUrl]);
-
    //perform the delete object func from canvas when user pree "delete" or backspace key from keyboard
    useEffect(() => {
     const handleKeyDown = (e) => {
@@ -163,9 +134,14 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
     }
   };
 
-  //handler for loaction marker
   const handleAddLocationMarker = () => {
-    fabric.Image.fromURL('public/images/locationMarker.webp', (img) => {
+    // Check if the image URL is valid
+    const imageUrl = "";
+    fabric.Image.fromURL(imageUrl, (img) => {
+      if (!img) {
+        console.error("Failed to load image from URL:", imageUrl);
+        return;
+      }
       img.set({
         left: 150,
         top: 150,
@@ -173,8 +149,9 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
         scaleY: 0.1,
       });
       canvasInstance.current.add(img);
-    });
+    }, { crossOrigin: 'anonymous' });  // Add CORS header if needed
   };
+  
 
   //handler for text
   const handleAddText = () => {
@@ -252,54 +229,22 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
   };
 
   //handler for addimage
-  const handleAddImage = () => {
-    const imageUrl = '/images/transparentBg.png'; // Path to the image file
-
+  const handleAddImage = (imgURL) => {
     // Load the image into the canvas
-    fabric.Image.fromURL(imageUrl, (img) => {
-        if (img) {
-            console.log('Image loaded successfully:', img);
-
-            // Customize image properties
-            img.set({
-                left: (canvasInstance.current.getWidth() - img.width) / 2 || 200, // Center horizontally
-                top: (canvasInstance.current.getHeight() - img.height) / 2 || 200, // Center vertically
-                selectable: true, // Make the image draggable
-                hasControls: true, // Allow resizing
-                hasBorders: true, // Show borders
-            });
-
-            // Optional: Scale image if it's too large
-            const maxWidth = 300;
-            const maxHeight = 300;
-            if (img.width > maxWidth || img.height > maxHeight) {
-                const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
-                img.scale(scale);
-            }
-
-            // Add the image to the canvas
-            canvasInstance.current.add(img);
-
-            // Center the image on the canvas
-            canvasInstance.current.centerObject(img);
-            canvasInstance.current.setActiveObject(img);
-
-            // Render the canvas
-            canvasInstance.current.renderAll();
-        } else {
-            console.error('Failed to load the image.');
-        }
-    }, 
-    {
-        crossOrigin: 'anonymous', // Enable cross-origin for external images
+    fabric.Image.fromURL(imgURL, (img) => {
+      img.set({ left: 50, top: 50 });
+      img.scaleToWidth(300);
+      img.scaleToHeight(300);
+      canvasInstance.current.add(img);
     });
- };
-
+  }
 
  //handler for addimage
- const handleAddGif = () => {
-    fabric.Image.fromURL('/images/earth.gif', (img) => {
-      img.set({ left: 200, top: 200 });
+ const handleAddGif = (gifURL) => {
+    fabric.Image.fromURL(gifURL, (img) => {
+      img.set({ left: 50, top: 50 });
+      img.scaleToWidth(300);
+      img.scaleToHeight(300);
       canvasInstance.current.add(img);
     }, (error) => {
       console.error('Error loading GIF:', error);
@@ -397,21 +342,35 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
       setShapeList(shapes);
     }
   };
-  // Delete the selected object from canvas
-  const handleDeleteObjectFromList = () => {
-    const canvas = canvasInstance.current;
-    if (canvas) {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject) {
-        canvas.remove(activeObject); // Remove the selected object
-        canvas.renderAll(); // Re-render the canvas
-      } else {
-        alert('No Object selected to delete');
-      }
+  
+  // Handle Image Upload and Add to Canvas
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0]; // Get the uploaded file
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const imageURL = event.target.result; // Get the image data URL
+        // Update the image URL state for preview
+        setImageUrl(imageURL);
+        // Create an image element to load the file
+        const imageElement = document.createElement('img');
+        imageElement.src = imageURL;
+  
+        imageElement.onload = () => {
+          const image = new fabric.Image(imageElement); // Create a Fabric.js image object
+          canvasInstance.current.add(image);
+          canvasInstance.current.centerObject(image); // Center the image on the canvas
+          canvasInstance.current.setActiveObject(image); // Set the added image as active
+          canvasInstance.current.renderAll(); // Re-render the canvas
+        };
+      };
     }
   };
+  
 
   return (
+  <div className='canvMainContainer'>
     <div className='canvasContainer'>
       <div className='topBarInCanvasEditor'>
          <span>
@@ -458,7 +417,22 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
       )}
       <ContentList canvasInstance={canvasInstance} />
     </div>
-  );
+    <div className="rightContainer">
+      <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="imageUploadInput"
+       />
+      {imageUrl && (
+        <div>
+            <p>Image Preview:</p>
+            <img src={imageUrl} alt="Uploaded" style={{ width: "100%", maxHeight: "300px" }} />
+        </div>
+      )}
+  </div>
+</div>
+);
 };
 
 export default Editor;
