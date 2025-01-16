@@ -411,41 +411,43 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
     }
   };
 
-  
   return (
     <div className='canvasContainer'>
       <div className='topBarInCanvasEditor'>
-        <span>
+         <span>
              <div className='listContainer'>
-                <button onClick={() => setIsShapeListVisible(!isShapeListVisible)}>
+                 <button onClick={() => setIsShapeListVisible(!isShapeListVisible)}>
                      <i className={isShapeListVisible ? 'fas fa-times' : 'fas fa-layer-group'}></i>
                  </button>
                  {/* Render the list of shapes on canvas */}
                  {isShapeListVisible && (
-                    <div className="shapeList">
-                      <h4>Shapes on Canvas:</h4>
-                      <ul>
-                        {shapeList.length > 0 ? (
-                           shapeList.map((shape, index) => (
-                              <li key={index}>{shape}</li>
-                           ))
-                          ) : (
-                            <li>No shapes on the canvas</li>
-                        )}
-                      </ul>
-                    </div>
-                 )}  
+                     <div className="shapeList">
+                         <h4>Shapes on Canvas:</h4>
+                         <ul>
+                            {shapeList.length > 0 ? (
+                               shapeList.map((shape, index) => (
+                                  <li key={index}>{shape}</li>
+                               ))
+                             ) : (
+                                <li>No shapes on the canvas</li>
+                             )}
+                         </ul>
+                     </div>
+                  )}
              </div>
-             <button onClick={handleSaveCanvas}>Save</button>
-             <button onClick={handleDeleteObject}>Delete</button>
-             <button onClick={clearCanvas}>Clear Canvas</button>
-             <button onClick={handlePreviewCanvas}>Preview</button>
-        </span>
+             <div className='buttonContainer'>
+                 <button onClick={handleSaveCanvas}><i className="fas fa-save"></i></button>
+                 <button onClick={handleDeleteObject}><i className="fas fa-trash-alt"></i></button>
+                 <button onClick={clearCanvas}>Clear Canvas</button>
+             </div>
+         </span>
       </div>
       <canvas ref={canvasRef} />
-      <button onClick={increaseCanvasSize}>+</button>
-      <button onClick={decreaseCanvasSize}>-</button>
-      <ContentList canvasInstance={canvasInstance} />
+      <div className='bottomButtonsContainer'>
+        <button onClick={increaseCanvasSize}>+</button>
+        <button onClick={decreaseCanvasSize}>-</button>
+        <button onClick={handlePreviewCanvas}>Preview</button>
+      </div>
       {/* Render the preview modal or section */}
       {previewImage && (
         <div className="previewModal">
@@ -453,6 +455,7 @@ const Editor = ({ shapeToDraw, imageUrl }) => {
           <button onClick={() => setPreviewImage(null)}><i className='fas fa-times'></i></button>
         </div>
       )}
+      <ContentList canvasInstance={canvasInstance} />
     </div>
   );
 };
