@@ -76,6 +76,7 @@ const Editor = ({ shapeToDraw }) => {
         case 'Image': handleAddImage(); break;
         case 'GIF': handleAddGif(); break;
         case 'Iframe': handleAddIframeSimulated(); break;
+        case 'Video': handleAddVideo(); break;
         default: break;
       }
     }
@@ -88,7 +89,6 @@ const Editor = ({ shapeToDraw }) => {
         handleDeleteObject();
       }
     };
-  
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
@@ -210,23 +210,35 @@ const Editor = ({ shapeToDraw }) => {
     canvasInstance.current.add(square);
   };
 
-
   //handler for arrow
   const handleAddArrow = () => {
-    const line = new fabric.Line([50, 50, 150, 50], {
+    const line = new fabric.Line([55, 55, 140, 55], {
       stroke: 'black',
       strokeWidth: 2,
+      selectable:true,
     });
-
     const triangle = new fabric.Triangle({
       width: 20,
       height: 20,
       fill: 'black',
-      left: 150,
-      top: 48,
+      left: 150-10,
+      top: 55-10,
       angle: 90,
     });
-    canvasInstance.current.add(line, triangle);
+     // Group the line and triangle together as a single object
+     const arrowGroup = new fabric.Group([line, triangle], {
+         left: 100,  
+         top: 100,
+         angle: 0,  
+    });
+    canvasInstance.current.add(arrowGroup);
+    arrowGroup.set({
+      hasControls: true,
+      lockScalingX: true,
+      lockScalingY: true,
+      lockRotation: true, 
+    });
+    canvasInstance.current.renderAll();
   };
 
   //handler for addimage
@@ -266,7 +278,6 @@ const Editor = ({ shapeToDraw }) => {
       console.error("Failed to load image");
     };
   };
-  
 
   //handler for Iframe add
   const handleAddIframeSimulated = () => {
@@ -290,6 +301,25 @@ const Editor = ({ shapeToDraw }) => {
     canvasInstance.current.add(rect, text);
   };
 
+  //handler for ading video
+  const handleAddVideo = () => {
+    const vElement = new Image();
+    vElement.src = '/images/video.png'; 
+    vElement.onload = () => {
+      const video = new fabric.Image(vElement, {
+        left: 50,
+        top: 50,
+        scaleX: 180 / vElement.width,
+        scaleY: 100 / vElement.height,
+      });
+      canvasInstance.current.add(video);
+      canvasInstance.current.renderAll();
+    };
+    vElement.onerror = () => {
+      console.error("Failed to load image");
+    };
+  };
+  
   //save canvas state
   const handleSaveCanvas = async () => {
 
@@ -441,12 +471,6 @@ const Editor = ({ shapeToDraw }) => {
           onChange={handleImageUpload}
           className="imageUploadInput"
        />
-      {imageUrl && (
-        <div>
-            <p>Image Preview:</p>
-            <img src={imageUrl} alt="Uploaded" style={{ width: "100%", maxHeight: "300px" }} />
-        </div>
-      )}
   </div>
 </div>
 );

@@ -150,10 +150,6 @@ const MainPage = () => {
                             {visibleWidgets.wid6 && (
                                 <>
                                     <div className="options opt6">
-                                        <i className="fas fa-chart-line"></i>
-                                        <button>Chart</button>
-                                    </div>
-                                    <div className="options opt6">
                                         <i className="fab fa-html5"></i>
                                         <button onClick={() => setShapeToDraw('Iframe')}>Element</button>
                                     </div>
@@ -163,7 +159,7 @@ const MainPage = () => {
                                     </div>
                                     <div className="options opt6">
                                         <i className="fas fa-video"></i>
-                                        <button>Video</button>
+                                        <button onClick={() => setShapeToDraw('Video')}>Video</button>
                                     </div>
                                 </>
                             )}
