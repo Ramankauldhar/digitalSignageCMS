@@ -462,7 +462,6 @@ const Editor = ({ shapeToDraw }) => {
           <button onClick={() => setPreviewImage(null)}><i className='fas fa-times'></i></button>
         </div>
       )}
-      <ContentList canvasInstance={canvasInstance} />
     </div>
     <div className="rightContainer">
       <input

@@ -181,7 +181,7 @@ const MainPage = () => {
                 </div>
 
                 <div className="editorAreaContainer">
-                          <Editor shapeToDraw={shapeToDraw}/>
+                    <Editor shapeToDraw={shapeToDraw}/>
                 </div>
             </div>
           </div>

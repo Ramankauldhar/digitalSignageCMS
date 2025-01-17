@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { fetchContents } from "../services/api";
-import * as fabric from 'fabric';
+import {fetchContentByScreen } from "../services/api";
 import '../styles/contentListStyles.css';
+import { useScreenId } from '../context/ScreenIdContext';
 
 const ContentList = ({ canvasInstance }) => {
     const [contents, setContents] = useState([]);
@@ -13,7 +13,7 @@ const ContentList = ({ canvasInstance }) => {
     useEffect(() => {
         const getContents = async () => {
             try {
-                const data = await fetchContents();
+                const data = await fetchContentByScreen(useScreenId);
                 console.log('Fetched contents:', data);
                 setContents(data);
                 setLoading(false);

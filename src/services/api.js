@@ -1,6 +1,37 @@
 import axios from 'axios';
 
 const API_URL ="http://localhost:5000";
+const WS_URL = "http://localhost:5000";
+
+let socket = null;
+
+// Initialize WebSocket Connection
+export const initWebSocket = (screenId, onMessage) => {
+    if (!socket) {
+        socket = new WebSocket(WS_URL);
+        
+        socket.onopen = () => {
+            console.log("WebSocket Connected");
+            socket.send(JSON.stringify({ type: "subscribe", screenId }));
+        };
+
+        socket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'new-content' && data.screenId === screenId) {
+                    onMessage(data.data);
+                }
+            } catch (err) {
+                console.error("Error parsing WebSocket message:", err);
+            }
+        };
+
+        socket.onclose = () => {
+            console.log("WebSocket Disconnected");
+            socket = null;
+        };
+    }
+};
 
 // Save content for a specific screen
 export const saveContent = async (screenId, data) =>{
@@ -49,10 +80,13 @@ export const registerScreen = async (screenId) => {
                 'Content-Type': 'application/json',
             },
         });
-        return response.data; // Return response from the server
+        return response.data;
     } catch (error) {
+        if (error.response && error.response.status === 409) {
+            console.warn('Screen already registered:', error.response.data.message);
+        }
         console.error('Error registering screen:', error.response ? error.response.data : error.message);
-        throw error; // Re-throw the error
+        throw error;
     }
 };
 

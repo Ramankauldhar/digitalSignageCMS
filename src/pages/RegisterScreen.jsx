@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchContentByScreen } from '../services/api';  
+import { checkScreen, registerScreen, fetchContentByScreen } from '../services/api';  
 import { useScreenId } from '../context/ScreenIdContext';
 import '../styles/registerScreenstyles.css';
+
+const WS_URL = "ws://localhost:8080";  // WebSocket Server URL
 
 const RegisterScreen = () => {
   const [screenId, setScreenId] = useState('');  // State to hold the screenId input
@@ -12,6 +14,30 @@ const RegisterScreen = () => {
   const [content, setContent] = useState(null);  // State to hold content for canvas
   const navigate = useNavigate();  // For navigation
   const { updateScreenId } = useScreenId();  // Get the update function from context
+  const [socket, setSocket] = useState(null);  // Store WebSocket connection
+
+  // Initialize WebSocket connection
+  useEffect(() => {
+    const ws = new WebSocket(WS_URL);
+    
+    ws.onopen = () => console.log('WebSocket Connected');
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'new-content' && data.screenId === screenId) {
+          setContent(data.data);  // Update content in real-time
+        }
+      } catch (err) {
+        console.error('Error parsing WebSocket message:', err);
+      }
+    };
+
+    ws.onclose = () => console.log('WebSocket Disconnected');
+    setSocket(ws);
+
+    return () => ws.close();  // Cleanup on unmount
+  }, [screenId]);
+
 
   // Function to check if the screenId exists in the database
   const validateScreenId = async () => {
@@ -19,14 +45,14 @@ const RegisterScreen = () => {
     setMessage('');
 
     try {
-      // Check if the screenId exists in the database
-      const response = await fetchContentByScreen(screenId);
-      
-      // If the response has content, it means the screenId is valid
-      if (response && response.length > 0) {
+      const response = await checkScreen(screenId); // Use checkScreenId from api.js
+      if (response && response.registered) {
         setIsScreenIdValid(true);
-        setContent(response);  // Store content if available
-        setMessage('Screen ID is valid!');  // Show success message
+        setContent(response.content); 
+        setMessage('Screen ID is valid!');
+        if (socket) {
+          socket.send(JSON.stringify({ type: 'subscribe', screenId }));
+        }
       } else {
         setIsScreenIdValid(false);
         setMessage('Invalid Screen ID. Please try again.');
@@ -55,15 +81,17 @@ const RegisterScreen = () => {
   // Handle form submission (screen registration)
   const handleRegister = async (e) => {
     e.preventDefault();
-    if(!screenId){
+    if(!screenId) {
       alert("Please enter a valid screen ID");
       return;
     }
-     // Update the screenId in the context
-    updateScreenId(screenId);
 
-    // Call validateScreenId function to validate the entered screenId
+    updateScreenId(screenId);
     validateScreenId();
+    if(!isScreenIdValid){
+      await registerScreen(screenId); // Register the screen through API call
+      setIsScreenIdValid(true);
+    }
   };
 
   return (
