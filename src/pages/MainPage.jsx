@@ -151,7 +151,7 @@ const MainPage = () => {
                                 <>
                                     <div className="options opt6">
                                         <i className="fab fa-html5"></i>
-                                        <button onClick={() => setShapeToDraw('Iframe')}>Element</button>
+                                        <button>Element</button>
                                     </div>
                                     <div className="options opt6">
                                         <i className="fas fa-window-maximize"></i>

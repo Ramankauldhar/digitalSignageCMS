@@ -7,7 +7,8 @@
     width: 100vw; 
     display: flex;
     justify-content: center;  
-    align-items: center;    
+    align-items: center; 
+    padding: 20px;   
 }
 .register-container, .synContainer{
     background-color: white;
@@ -85,4 +86,50 @@ p{
 .message.success {
   color: green;
   font-weight: bold;
+}
+
+
+
+/*------------ Screen Responsive point for all screens -----------------*/
+/* Responsive Design */
+@media screen and (max-width: 1024px) {
+  .register-container, .synContainer {
+      width: 50vw;
+      height: auto;
+      margin-top: 40vh;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .register-container, .synContainer {
+      width: 70vw;
+      height: auto;
+      margin-top: 30vh;
+  }
+  
+  .regMainContainer {
+      height: 60vh;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .register-container, .synContainer {
+      width: 90vw;
+      height: auto;
+      margin-top: 20vh;
+      padding: 15px;
+  }
+
+  h2 {
+      font-size: 1.2rem;
+      margin-top: 2rem;
+  }
+
+  p {
+      font-size: 10px;
+  }
+
+  input {
+      font-size: 10px;
+  }
 }
