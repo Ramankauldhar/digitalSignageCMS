@@ -61,6 +61,16 @@ const RegisterScreen = () => {
       };
   }, [screenId]);  
 
+  //check if a screenId already exists in localStorage. If it does, auto-sync the user
+  useEffect(() => {
+    const storedScreenId = localStorage.getItem('screenId');
+    if (storedScreenId) {
+      setScreenId(storedScreenId);
+      setIsScreenIdValid(true);
+      updateScreenId(storedScreenId);
+    }
+  }, []);  
+
   // Handle input changes for screenId
   const handleInputChange = (e) => {
     setScreenId(e.target.value);
@@ -97,6 +107,7 @@ const RegisterScreen = () => {
         setContent(response.content);
         setMessage('Screen ID is valid!');
         updateScreenId(screenId);
+        localStorage.setItem('screenId', screenId);
   
         // Send subscribe message via WebSocket if connected
         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -109,6 +120,7 @@ const RegisterScreen = () => {
         try {
           const registerResponse = await registerScreen(screenId);
           console.log('registerScreen response:', registerResponse); // Log the response
+          localStorage.setItem('screenId', screenId);
           
           setIsScreenIdValid(true);
           localStorage.removeItem('canvasState');

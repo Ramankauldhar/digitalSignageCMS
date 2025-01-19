@@ -3,6 +3,7 @@ import * as fabric from 'fabric';
 import { useScreenId } from '../context/ScreenIdContext'; //useScreenId hook
 import { saveContent } from '../services/api';
 import '../styles/mainPageStyles.css';
+import { useNavigate } from 'react-router-dom';
 
 const Editor = ({ shapeToDraw }) => {
   const canvasRef = useRef(null);
@@ -15,6 +16,7 @@ const Editor = ({ shapeToDraw }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   // State to hold the uploaded image URL
   const [imageUrl, setImageUrl] = useState(null); 
+  const navigate = useNavigate();  // For navigation
  
   //load the saved canvasData from localStorage
   const loadCanvasFromLocalStorage = () => {
@@ -39,7 +41,7 @@ const Editor = ({ shapeToDraw }) => {
     if (!screenId) {
        alert("No screenId found. Please register a screen first.");
        localStorage.removeItem('canvasState');
-       return null;
+       return;
     }
     const canvas = new fabric.Canvas(canvasRef.current, {
       height: canvasSize.current,
@@ -50,7 +52,7 @@ const Editor = ({ shapeToDraw }) => {
     canvasInstance.current = canvas; //store canvas instance in ref
     
     // Load content from localStorage immediately if available
-    if (localStorage.getItem("canvasState")) {
+    if (localStorage.getItem("canvasState") && canvasInstance.current) {
         loadCanvasFromLocalStorage();
     } else {
         // If there's no saved state, render the blank canvas initially
@@ -424,6 +426,11 @@ const Editor = ({ shapeToDraw }) => {
     }
   };
   
+  const handleLogout = () => {
+    localStorage.removeItem('screenId');
+    localStorage.removeItem('canvasState');
+    navigate('/');
+  }
 
   return (
   <div className='canvMainContainer'>
@@ -455,6 +462,7 @@ const Editor = ({ shapeToDraw }) => {
                  <button onClick={handleSaveCanvas}><i className="fas fa-save"></i></button>
                  <button onClick={handleDeleteObject}><i className="fas fa-trash-alt"></i></button>
                  <button onClick={clearCanvas}>Clear Canvas</button>
+                 <button onClick={handleLogout}>Sign Out</button>
              </div>
          </span>
       </div>
