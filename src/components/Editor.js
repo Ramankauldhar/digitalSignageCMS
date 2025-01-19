@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState} from 'react';
 import * as fabric from 'fabric';
 import { useScreenId } from '../context/ScreenIdContext'; //useScreenId hook
 import { saveContent } from '../services/api';
-import ContentList from "../components/ContentList";
 import '../styles/mainPageStyles.css';
 
 const Editor = ({ shapeToDraw }) => {
@@ -20,20 +19,26 @@ const Editor = ({ shapeToDraw }) => {
   //load the saved canvasData from localStorage
   const loadCanvasFromLocalStorage = () => {
     const savedCanvasData = localStorage.getItem('canvasState');
-    if (savedCanvasData && canvasInstance.current) {
-      canvasInstance.current.loadFromJSON(savedCanvasData, () => {
-        console.log('Canvas content loaded from localStorage.');
-        canvasInstance.current.renderAll();//explicit render after loading state
-      });
+    if (savedCanvasData) {
+      const parsedData = JSON.parse(savedCanvasData);  // Parse the saved data
+      if (parsedData.screenId === screenId) {  // Only load if the screenId matches
+        canvasInstance.current.loadFromJSON(parsedData.canvasData, () => {
+          console.log('Canvas content loaded from localStorage.');
+          canvasInstance.current.renderAll();  // Explicit render after loading state
+        });
+      } else {
+        console.log('No matching screenId found in localStorage.');
+      }
     } else {
       console.log('No canvas content found in localStorage.');
     }
-  };
+  };  
 
   useEffect(() => {
     // Ensure screenId is available
     if (!screenId) {
        alert("No screenId found. Please register a screen first.");
+       localStorage.removeItem('canvasState');
        return null;
     }
     const canvas = new fabric.Canvas(canvasRef.current, {
@@ -332,8 +337,12 @@ const Editor = ({ shapeToDraw }) => {
     // Convert the canvas content to JSON
     const canvasData = JSON.stringify(canvasInstance.current.toJSON());
 
-    // Save to localStorage
-    localStorage.setItem('canvasState', canvasData);
+    // Save to localStorage along with the screenId
+    const canvasState = {
+       screenId,
+       canvasData
+    };
+    localStorage.setItem('canvasState', JSON.stringify(canvasState));  // Store both screenId and canvasData
     console.log('Canvas content saved to localStorage.');
 
     try {

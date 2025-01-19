@@ -115,7 +115,7 @@ const RegisterScreen = () => {
           updateScreenId(screenId);
           setMessage('Screen registered successfully.');
   
-          // Optionally, you can send the subscribe message after registration
+          // subscribe message after registration
           if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'subscribe', screenId }));
           }
