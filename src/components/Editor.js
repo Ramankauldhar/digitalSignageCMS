@@ -4,6 +4,7 @@ import { useScreenId } from '../context/ScreenIdContext'; //useScreenId hook
 import { saveContent } from '../services/api';
 import '../styles/mainPageStyles.css';
 import { useNavigate } from 'react-router-dom';
+import { checkScreen, registerScreen} from '../services/api'; 
 
 const Editor = ({ shapeToDraw }) => {
   const canvasRef = useRef(null);
@@ -101,7 +102,6 @@ const Editor = ({ shapeToDraw }) => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-  
 
   //clear the canvas function
   const clearCanvas = () => {

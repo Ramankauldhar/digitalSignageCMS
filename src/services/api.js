@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_URL ="http://localhost:5000";
-const WS_URL = "ws://localhost:5000";
+const API_URL ="https://digitalsignagebackendsystem.onrender.com";
+const WS_URL = "wss://digitalsignagebackendsystem.onrender.com";
 
 let socket = null;
 

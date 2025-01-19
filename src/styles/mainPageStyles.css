@@ -202,3 +202,12 @@ canvas {
   .rightContainer{
     width: 20%;
 }
+
+@media screen and (max-width: 800px) {
+  .rightContainer{
+    display: none;
+  }
+  .canvasContainer{
+    width: 100%;
+  }
+}

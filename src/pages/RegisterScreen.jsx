@@ -21,7 +21,7 @@ const RegisterScreen = () => {
       if(!screenId) return;
 
       //created websocket connection to the server
-      const socket = new WebSocket('ws://localhost:5000');
+      const socket = new WebSocket('wss://digitalsignagebackendsystem.onrender.com');
 
       //when websocket connection opens, send a message to the server
       socket.onopen = () => {
