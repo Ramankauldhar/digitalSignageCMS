@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { checkScreen, registerScreen, fetchContentByScreen } from '../services/api';  
+import { checkScreen, registerScreen} from '../services/api';  
 import { useScreenId } from '../context/ScreenIdContext';
 import '../styles/registerScreenstyles.css';
-
-const WS_URL = "ws://localhost:8080";  // WebSocket Server URL
 
 const RegisterScreen = () => {
   const [screenId, setScreenId] = useState('');  // State to hold the screenId input
@@ -14,56 +12,54 @@ const RegisterScreen = () => {
   const [content, setContent] = useState(null);  // State to hold content for canvas
   const navigate = useNavigate();  // For navigation
   const { updateScreenId } = useScreenId();  // Get the update function from context
-  const [socket, setSocket] = useState(null);  // Store WebSocket connection
+  const [ws, setWs] = useState(null);  // State to Store WebSocket connection
+  const [status, setStatus] = useState('');
 
   // Initialize WebSocket connection
   useEffect(() => {
-    const ws = new WebSocket(WS_URL);
-    
-    ws.onopen = () => console.log('WebSocket Connected');
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'new-content' && data.screenId === screenId) {
-          setContent(data.data);  // Update content in real-time
-        }
-      } catch (err) {
-        console.error('Error parsing WebSocket message:', err);
-      }
-    };
+      //only create websocket when screenId is set
+      if(!screenId) return;
 
-    ws.onclose = () => console.log('WebSocket Disconnected');
-    setSocket(ws);
+      //created websocket connection to the server
+      const socket = new WebSocket('ws://localhost:5000');
 
-    return () => ws.close();  // Cleanup on unmount
-  }, [screenId]);
+      //when websocket connection opens, send a message to the server
+      socket.onopen = () => {
+        console.log('WebSocket Connected');
+        setStatus('Server Connected');
+        // Send the screenId when the connection is established
+        socket.send(JSON.stringify({ type: 'subscribe', screenId }));  // Send the screenId to the server  
+      };
+  
+      //when websocket receives a message
+      socket.onmessage = (event) => {
+        console.log('Message from server:', event.data);
+      };
+  
+      socket.onerror = (error) => {
+        console.error('WebSocket Error:', error);
+        setStatus('Error! Unable to connect with server');
+        // Retry connection after a delay
+        setTimeout(() => {
+         console.log('Retrying WebSocket connection...');
+         setStatus('Reconnecting...');
+         const newSocket = new WebSocket('ws://localhost:5000');
+         setWs(newSocket);
+        }, 5000);  // Retry after 5 seconds
+      };
+  
+      socket.onclose = () => {
+        console.log('WebSocket Disconnected');
+        setStatus('Disconnected');
+      };
 
+      setWs(socket);
 
-  // Function to check if the screenId exists in the database
-  const validateScreenId = async () => {
-    setIsLoading(true);
-    setMessage('');
-
-    try {
-      const response = await checkScreen(screenId); // Use checkScreenId from api.js
-      if (response && response.registered) {
-        setIsScreenIdValid(true);
-        setContent(response.content); 
-        setMessage('Screen ID is valid!');
-        if (socket) {
-          socket.send(JSON.stringify({ type: 'subscribe', screenId }));
-        }
-      } else {
-        setIsScreenIdValid(false);
-        setMessage('Invalid Screen ID. Please try again.');
-      }
-    } catch (error) {
-      setIsScreenIdValid(false);
-      setMessage('Error validating Screen ID. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      // Cleanup on component unmount
+      return () => {
+         socket.close();
+      };
+  }, [screenId]);  
 
   // Handle input changes for screenId
   const handleInputChange = (e) => {
@@ -72,27 +68,74 @@ const RegisterScreen = () => {
 
   // Handle Sync button click
   const handleSync = () => {
-    if (isScreenIdValid) {
-      // Navigate to the MainPage and pass the content
+    if (isScreenIdValid && screenId) {
       navigate('/main', { state: { content, screenId } });
+    } else {
+      setMessage('Please enter a valid screen ID before syncing.');
     }
   };
 
   // Handle form submission (screen registration)
   const handleRegister = async (e) => {
     e.preventDefault();
-    if(!screenId) {
+  
+    if (!screenId) {
       alert("Please enter a valid screen ID");
       return;
     }
-
-    updateScreenId(screenId);
-    validateScreenId();
-    if(!isScreenIdValid){
-      await registerScreen(screenId); // Register the screen through API call
-      setIsScreenIdValid(true);
+  
+    setIsLoading(true);
+    setMessage('');
+  
+    try {
+      // Step 1: Check if the screenId is already registered
+      const response = await checkScreen(screenId);
+      
+      if (response.registered) {
+        // Screen ID is already valid and registered
+        setIsScreenIdValid(true);
+        setContent(response.content);
+        setMessage('Screen ID is valid!');
+        updateScreenId(screenId);
+  
+        // Send subscribe message via WebSocket if connected
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'subscribe', screenId }));
+        } else {
+          console.log("Web Socket is not open yet");
+        }
+      } else {
+        // Step 2: Register the screen if it's not already registered
+        try {
+          const registerResponse = await registerScreen(screenId);
+          console.log('registerScreen response:', registerResponse); // Log the response
+          
+          setIsScreenIdValid(true);
+          localStorage.removeItem('canvasState');
+          updateScreenId(screenId);
+          setMessage('Screen registered successfully.');
+  
+          // Optionally, you can send the subscribe message after registration
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'subscribe', screenId }));
+          }
+  
+        } catch (error) {
+          // Handle any error during screen registration
+          setIsScreenIdValid(false);
+          setMessage('Error registering screen. Please try again.');
+          console.error('Error during registration:', error);
+        }
+      }
+    } catch (error) {
+      // Catch any error that might happen while checking the screen
+      setIsScreenIdValid(false);
+      setMessage('Error verifying screen ID. Please try again.');
+      console.error('Error checking screen:', error);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  };  
 
   return (
     <div className='regMainContainer'>
@@ -106,8 +149,9 @@ const RegisterScreen = () => {
         </div>
   
         {isScreenIdValid && (
-          <button onClick={handleSync} className="sync-button">
-              Sync Device
+          <button onClick={handleSync} className="sync-button" disabled={isLoading || !isScreenIdValid}
+          >
+             {isLoading ? 'Syncing...' : 'Sync Device'}
           </button>
         )}
   
@@ -138,6 +182,7 @@ const RegisterScreen = () => {
              <button type="submit" disabled={isLoading}>
                  {isLoading ? 'Validating...' : 'Activate'}
              </button>
+             {status && <p>Status: {status}</p>}
         </form>
       </div>
     )}

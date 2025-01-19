@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_URL ="http://localhost:5000";
-const WS_URL = "http://localhost:5000";
+const WS_URL = "ws://localhost:5000";
 
 let socket = null;
 
@@ -41,8 +41,7 @@ export const saveContent = async (screenId, data) =>{
             headers: {
                 'Content-Type': 'application/json',
             },
-        }
-    );
+        });
         return response.data;
     }catch(error){
         console.error('Error saving this content: ', error);
@@ -95,8 +94,12 @@ export const checkScreen = async (screenId) => {
     try{
         const response = await axios.get(`${API_URL}/check-screen/${screenId}`);
         return response.data;
-    }catch(error){
-        console.error('Error checking screen:', error.response ? error.response.data : error.message);
-        throw error; // Re-throw the error
-    }
-}
+    }catch (error) {
+        // Check if it's a 404 error and return a custom error message
+        if (error.response && error.response.status === 404) {
+          return { registered: false }; // If screen doesn't exist, return false
+        }
+        // If any other error occurs, re-throw the error to be handled later
+        throw error;
+      }
+};
